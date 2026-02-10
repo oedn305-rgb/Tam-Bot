@@ -6,10 +6,15 @@
 
 # --- (1) سحب الأكواد السرية من القفل (تأكد من تسميتها في Secrets بنفس الأسماء) ---
 ‏import os
-API_KEY = os.getenv('API_KEY')
-BLOG_ID = os.getenv('BLOG_ID')
-‏OPENAI_API_KEY = os.environ.get('')
+import os
 
+# سحب الأسرار من خزنة جيتهاب تلقائياً
+import os
+
+# سحب الأسرار من خزنة جيتهاب تلقائياً
+BLOG_ID = os.getenv('BLOG_ID')
+API_KEY = os.getenv('API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ‏def log(msg):
 ‏    print(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
