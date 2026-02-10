@@ -1,0 +1,23 @@
+import os
+import requests
+
+def test_connection():
+    print("Testing Connection...")
+    api_key = os.getenv('API_KEY')
+    blog_id = os.getenv('BLOG_ID')
+    
+    if not api_key or not blog_id:
+        print("Error: Missing Keys in Secrets!")
+        return
+
+    url = f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}?key={api_key}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        print("✅ SUCCESS! Connected to:", response.json().get('name'))
+    else:
+        print("❌ FAILED! Code:", response.status_code)
+        print("Message:", response.text)
+
+if __name__ == "__main__":
+    test_connection()
