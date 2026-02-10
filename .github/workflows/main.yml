@@ -1,27 +1,56 @@
-name: Tam Bot Engine
-on:
-  schedule:
-    - cron: '*/15 * * * *' # تشغيل آلي كل 15 دقيقة
-  workflow_dispatch: # زر للتشغيل اليدوي
+import os
+import requests
+import random
 
-jobs:
-  run-bot:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+def safe_tam_bot():
+    openai_key = os.getenv('OPENAI_API_KEY')
+    api_key = os.getenv('API_KEY')
+    blog_id = os.getenv('BLOG_ID')
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    # قطاعات منوعة لاستهداف بحث حراج ومستعمل
+    sectors = ["السيارات المستعملة", "العقارات السكنية", "الجوالات والأجهزة", "الخدمات المنزلية"]
+    target = random.choice(sectors)
 
-      - name: Install Dependencies
-        run: pip install requests
+    # أمر (Prompt) احترافي يضمن محتوى حصري 100%
+    prompt = (
+        f"أنت خبير محتوى تسويقي. اكتب مقالاً حصرياً لمدونة 'تم السعودية' بعنوان: 'دليل شامل حول أسعار {target} في السوق السعودي لهذا الشهر'.\n"
+        "المطلوب لضمان قبول أدسنس:\n"
+        "1. ابدأ بمقدمة تتحدث عن حالة السوق حالياً.\n"
+        "2. قارن بين العروض القديمة والجديدة (بدون نسخ أرقام جوالات أو أسماء معلنين).\n"
+        "3. أضف قسم: 'نصيحة خبراء تم السعودية للمشترين'.\n"
+        "4. استخدم كلمات مفتاحية طبيعية (SEO) غير مكررة بشكل مزعج.\n"
+        "5. اجعل الخاتمة تدعو القارئ لمشاركة رأيه في التعليقات.\n"
+        "التنسيق: HTML احترافي بفقرات واضحة."
+    )
 
-      - name: Execute Bot
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          BLOG_ID: ${{ secrets.BLOG_ID }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python main.py
+    headers = {"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"}
+    data = {
+        "model": "gpt-3.5-turbo", # يمكنك ترقيته لـ gpt-4 لمحتوى أكثر عمقاً
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.6 # درجة حرارة منخفضة لضمان عقلانية النص وعدم التكرار
+    }
+
+    try:
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
+        content = response.json()['choices'][0]['message']['content']
+
+        # تجهيز المقال للنشر
+        lines = content.strip().split('\n')
+        title = lines[0].replace("#", "").strip()
+        body = "".join(lines[1:]).replace("\n", "<br>")
+
+        # النشر عبر Blogger API
+        url = f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}/posts/?key={api_key}"
+        payload = {"kind": "blogger#post", "title": title, "content": body}
+        
+        publish = requests.post(url, json=payload)
+        if publish.status_code == 200:
+            print(f"✅ تم نشر مقال آمن وحصري عن: {target}")
+        else:
+            print(f"❌ خطأ: {publish.text}")
+
+    except Exception as e:
+        print(f"❌ حدث خطأ: {e}")
+
+if __name__ == "__main__":
+    safe_tam_bot()
