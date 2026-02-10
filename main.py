@@ -1,33 +1,29 @@
-import os
-import requests
+name: Tam Bot Engine
 
-def start_engine():
-    # 1. جلب البيانات من الخزنة
-    api_key = os.getenv('API_KEY')
-    blog_id = os.getenv('BLOG_ID')
-    
-    print(f"--- التحقق من الإعدادات ---")
-    if not api_key or not blog_id:
-        print("❌ خطأ: المفاتيح ناقصة في Secrets!")
-        return
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # يعمل كل 30 دقيقة بالضبط
+  workflow_dispatch:        # يتيح لك تشغيله يدوياً وقت ما تحب
 
-    # 2. محاولة الاتصال بمدونتك
-    url = f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}"
-    params = {'key': api_key}
-    
-    try:
-        response = requests.get(url, params=params)
-        
-        if response.status_code == 200:
-            blog_name = response.json().get('name')
-            print(f"✅ نجاح باهر! البوت متصل الآن بمدونة: {blog_name}")
-            print("--- البوت يعمل الآن في الخلفية لتحديث الروابط ---")
-        else:
-            print(f"❌ فشل الاتصال! كود الخطأ: {response.status_code}")
-            print(f"السبب: {response.text}")
-            
-    except Exception as e:
-        print(f"❌ خطأ غير متوقع: {e}")
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-if __name__ == "__main__":
-    start_engine()
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Run Tam Bot
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          BLOG_ID: ${{ secrets.BLOG_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python main.py
